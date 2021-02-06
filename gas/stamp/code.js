@@ -5,9 +5,10 @@ function doPostTest(){
   let url = ""; //Insert your web app URL.
 
   let postData = [
-    {"method":"get","id" :-1,},
-    {"method":"set","id" :-1,"text" : "hoge"},
-    {"method":"get","id" :-1,},
+    {"method":"get","id" :"-1",},
+    {"method":"set","id" :"-1","text" : "hoge"},
+    {"method":"get","id" :"-1",},
+    {"method":"get","id" :"48436",},
   ];
 
   postData.forEach(function(value) {
