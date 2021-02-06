@@ -1,5 +1,6 @@
 const line = require('@line/bot-sdk');
 const express = require('express');
+const request = require('request-promise');
 const router = express.Router();
 const config = {
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
@@ -32,6 +33,9 @@ const handlerEvent = async (event) => {
           text = message.text;
           await replyText(replyToken, text);
           return message.type;
+        case 'sticker':
+          handleSticker(message, replyToken);
+          return message.type;
         default:
           text = 'テキストを送信してください';
           await replyText(replyToken, text);
@@ -41,6 +45,24 @@ const handlerEvent = async (event) => {
       return event.type;
   }
 };
+
+
+function handleSticker(message, replyToken) {
+  let options = {
+    method: 'POST',
+    uri: process.env.GAS_STAMP_URL,
+    followAllRedirects: true,
+    json: {
+        method: 'get',
+        id: message.stickerId,
+    },
+  };
+  request(options)
+  .then(res => {
+    console.log(res);
+    return replyText(replyToken, res.text);
+  });
+}
 
 const replyText = (token, texts) => {
   texts = Array.isArray(texts) ? texts : [texts];
