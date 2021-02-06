@@ -56,7 +56,7 @@ function set(json){
 
 function getIndex(id){
   let id_array = column2array(data, 0);
-  return id_array.indexOf(id);
+  return id_array.indexOf(parseInt(id));
 }
 
 function column2array(array, index) {
