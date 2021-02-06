@@ -5,6 +5,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "preinstall": "sudo apt install libavahi-compat-libdnssd-dev -y & sudo apt install python3-pip python3-dev -y",
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,6 +17,7 @@
     "clasp": "^1.0.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "google-home-notifier": "^1.2.0",
     "ngrok": "^3.4.0",
     "request": "^2.88.2",
     "request-promise": "^4.2.6"
