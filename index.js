@@ -4,7 +4,12 @@ const ngrok = require('ngrok');
 const app = express();
 require('dotenv').config();
 
-app.use('/line', require('./routes/line.js'));
+const routes = {
+    line: require('./routes/line.js')
+}
+for(let [path, router] of Object.entries(routes)) {
+    app.use('/' + path, router);
+}
 
 const port = process.env.PORT || 3000
 
@@ -18,25 +23,9 @@ app.listen(port, () => {
     ngrok.connect(options)
     .then(url => {
         console.log(url);
-        let options = {
-            url: 'https://api.line.me/v2/bot/channel/webhook/endpoint',
-            method: 'PUT',
-            headers: {
-                'Authorization': 'Bearer ' + process.env.CHANNEL_ACCESS_TOKEN,
-                "Content-type": "application/json",
-            },
-            json: {
-              "endpoint": url + "/line",
-            }
+        for(let [path, router] of Object.entries(routes)) {
+            router.listen(url + '/' + path);
         }
-        request.put(options)
-        .then(body => {
-            console.log("Endpoint change completed.");
-        })
-        .catch(err => {
-            console.log(err);
-            process.exit(1);
-        });
     })
     .catch(err => {
         if (err.code === 'ECONNREFUSED') {

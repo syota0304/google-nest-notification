@@ -50,4 +50,9 @@ const replyText = (token, texts) => {
   );
 };
 
+router.listen = (url) => {
+  client.setWebhookEndpointUrl(url);
+  console.log("Changed LINE endpoint. " + url);
+};
+
 module.exports = router;
