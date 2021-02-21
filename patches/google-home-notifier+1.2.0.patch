@@ -39,23 +39,29 @@ index 0000000..91f41be
 +module.exports = VoiceTextWriter;
 \ No newline at end of file
 diff --git a/node_modules/google-home-notifier/google-home-notifier.js b/node_modules/google-home-notifier/google-home-notifier.js
-index 2de1294..aa89faa 100644
+index 2de1294..d6076a6 100644
 --- a/node_modules/google-home-notifier/google-home-notifier.js
 +++ b/node_modules/google-home-notifier/google-home-notifier.js
-@@ -1,9 +1,9 @@
+@@ -1,13 +1,13 @@
++var m_dns = require('multicast-dns');
  var Client = require('castv2-client').Client;
  var DefaultMediaReceiver = require('castv2-client').DefaultMediaReceiver;
 -var mdns = require('mdns');
 -var browser = mdns.createBrowser(mdns.tcp('googlecast'));
  var deviceAddress;
 -var language;
-+
+ 
+-var device = function(name, lang = 'en') {
 +var VoiceTextWriter = require('./VoiceTextWriter');
 +var voiceTextWriter = new VoiceTextWriter();
- 
- var device = function(name, lang = 'en') {
++
++var device = function(name) {
      device = name;
-@@ -16,13 +16,6 @@ var ip = function(ip) {
+-    language = lang;
+     return this;
+ };
+ 
+@@ -16,25 +16,30 @@ var ip = function(ip) {
    return this;
  }
  
@@ -64,12 +70,66 @@ index 2de1294..aa89faa 100644
 -var accent = function(accent) {
 -  googlettsaccent = accent;
 -  return this;
--}
--
++var find_ip = function(name, callback){
++  var mdns = new m_dns();
++  mdns.query({
++    questions:[{
++      name: name,
++      type: 'A'
++    }]
++  });
++
++  mdns.on('response', function(response) {
++    if(response.answers[0].name == name){
++      mdns.destroy();
++      callback(response.answers[0].data);
++    }
++  });
+ }
+ 
  var notify = function(message, callback) {
    if (!deviceAddress){
-     browser.start();
-@@ -64,12 +57,12 @@ var play = function(mp3_url, callback) {
+-    browser.start();
+-    browser.on('serviceUp', function(service) {
+-      console.log('Device "%s" at %s:%d', service.name, service.addresses[0], service.port);
+-      if (service.name.includes(device.replace(' ', '-'))){
+-        deviceAddress = service.addresses[0];
+-        getSpeechUrl(message, deviceAddress, function(res) {
+-          callback(res);
+-        });
+-      }
+-      browser.stop();
++    find_ip(device, ip => {
++      deviceAddress = ip;
++      getSpeechUrl(message, deviceAddress, function(res) {
++        callback(res);
++      });
+     });
+   }else {
+     getSpeechUrl(message, deviceAddress, function(res) {
+@@ -45,16 +50,11 @@ var notify = function(message, callback) {
+ 
+ var play = function(mp3_url, callback) {
+   if (!deviceAddress){
+-    browser.start();
+-    browser.on('serviceUp', function(service) {
+-      console.log('Device "%s" at %s:%d', service.name, service.addresses[0], service.port);
+-      if (service.name.includes(device.replace(' ', '-'))){
+-        deviceAddress = service.addresses[0];
+-        getPlayUrl(mp3_url, deviceAddress, function(res) {
+-          callback(res);
+-        });
+-      }
+-      browser.stop();
++    find_ip(device, ip => {
++      deviceAddress = ip;
++      getPlayUrl(mp3_url, deviceAddress, function(res) {
++        callback(res);
++      });
+     });
+   }else {
+     getPlayUrl(mp3_url, deviceAddress, function(res) {
+@@ -64,12 +64,12 @@ var play = function(mp3_url, callback) {
  };
  
  var getSpeechUrl = function(text, host, callback) {
@@ -86,7 +146,7 @@ index 2de1294..aa89faa 100644
    });
  };
  
-@@ -105,6 +98,5 @@ var onDeviceUp = function(host, url, callback) {
+@@ -105,6 +105,5 @@ var onDeviceUp = function(host, url, callback) {
  
  exports.ip = ip;
  exports.device = device;
@@ -95,10 +155,10 @@ index 2de1294..aa89faa 100644
  exports.play = play;
 diff --git a/node_modules/google-home-notifier/package-lock.json b/node_modules/google-home-notifier/package-lock.json
 new file mode 100644
-index 0000000..527fa51
+index 0000000..3660903
 --- /dev/null
 +++ b/node_modules/google-home-notifier/package-lock.json
-@@ -0,0 +1,732 @@
+@@ -0,0 +1,760 @@
 +{
 +  "name": "google-home-notifier",
 +  "version": "1.2.0",
@@ -339,6 +399,15 @@ index 0000000..527fa51
 +      "resolved": "https://registry.npmjs.org/destroy/-/destroy-1.0.4.tgz",
 +      "integrity": "sha1-l4hXRCxEdJ5CBmE+N5RiBYJqvYA="
 +    },
++    "dns-packet": {
++      "version": "4.2.0",
++      "resolved": "https://registry.npmjs.org/dns-packet/-/dns-packet-4.2.0.tgz",
++      "integrity": "sha512-bn1AKpfkFbm0MIioOMHZ5qJzl2uypdBwI4nYNsqvhjsegBhcKJUlCrMPWLx6JEezRjxZmxhtIz/FkBEur2l8Cw==",
++      "requires": {
++        "ip": "^1.1.5",
++        "safe-buffer": "^5.1.1"
++      }
++    },
 +    "ee-first": {
 +      "version": "1.1.1",
 +      "resolved": "https://registry.npmjs.org/ee-first/-/ee-first-1.1.1.tgz",
@@ -570,6 +639,15 @@ index 0000000..527fa51
 +      "resolved": "https://registry.npmjs.org/ms/-/ms-2.0.0.tgz",
 +      "integrity": "sha1-VgiurfwAvmwpAd9fmGF4jeDVl8g="
 +    },
++    "multicast-dns": {
++      "version": "7.2.2",
++      "resolved": "https://registry.npmjs.org/multicast-dns/-/multicast-dns-7.2.2.tgz",
++      "integrity": "sha512-XqSMeO8EWV/nOXOpPV8ztIpNweVfE1dSpz6SQvDPp71HD74lMXjt4m/mWB1YBMG0kHtOodxRWc5WOb/UNN1A5g==",
++      "requires": {
++        "dns-packet": "^4.0.0",
++        "thunky": "^1.0.2"
++      }
++    },
 +    "negotiator": {
 +      "version": "0.6.2",
 +      "resolved": "https://registry.npmjs.org/negotiator/-/negotiator-0.6.2.tgz",
@@ -680,6 +758,11 @@ index 0000000..527fa51
 +      "resolved": "https://registry.npmjs.org/reduce-component/-/reduce-component-1.0.1.tgz",
 +      "integrity": "sha1-4Mk1QsV0UhvqE98PlIjtgqt3xdo="
 +    },
++    "safe-buffer": {
++      "version": "5.2.1",
++      "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.2.1.tgz",
++      "integrity": "sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ=="
++    },
 +    "safer-buffer": {
 +      "version": "2.1.2",
 +      "resolved": "https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz",
@@ -776,6 +859,11 @@ index 0000000..527fa51
 +        "reduce-component": "1.0.1"
 +      }
 +    },
++    "thunky": {
++      "version": "1.1.0",
++      "resolved": "https://registry.npmjs.org/thunky/-/thunky-1.1.0.tgz",
++      "integrity": "sha512-eHY7nBftgThBqOyHGVN+l8gF0BucP09fMo0oO/Lb0w1OF80dJv+lDVpXG60WMQvkcxAkNybKsrEIE3ZtKGmPrA=="
++    },
 +    "toidentifier": {
 +      "version": "1.0.0",
 +      "resolved": "https://registry.npmjs.org/toidentifier/-/toidentifier-1.0.0.tgz",
@@ -832,7 +920,7 @@ index 0000000..527fa51
 +  }
 +}
 diff --git a/node_modules/google-home-notifier/package.json b/node_modules/google-home-notifier/package.json
-index dbb9457..4fc3b07 100644
+index 3d68c5e..bf69373 100644
 --- a/node_modules/google-home-notifier/package.json
 +++ b/node_modules/google-home-notifier/package.json
 @@ -1,26 +1,34 @@
@@ -874,13 +962,13 @@ index dbb9457..4fc3b07 100644
    "_resolved": "https://registry.npmjs.org/google-home-notifier/-/google-home-notifier-1.2.0.tgz",
    "_shasum": "e3d762503b0bc5770a9de92be8533bbe19fff580",
 -  "_spec": "google-home-notifier@https://registry.npmjs.org/google-home-notifier/-/google-home-notifier-1.2.0.tgz",
--  "_where": "/tmp/tmp-3498jGbaHyHBmarD",
+-  "_where": "/tmp/tmp-47996u4UmwDMRiHZ",
 +  "_spec": "google-home-notifier@^1.2.0",
 +  "_where": "/home/temari/google-nest-notification",
    "author": {
      "name": "Noel Portugal"
    },
-@@ -29,9 +37,10 @@
+@@ -29,9 +37,11 @@
      "body-parser": "^1.15.2",
      "castv2-client": "^1.1.2",
      "express": "^4.14.0",
@@ -889,6 +977,7 @@ index dbb9457..4fc3b07 100644
 -    "ngrok": "^2.2.4"
 +    "fs": "0.0.1-security",
 +    "ip": "^1.1.5",
++    "multicast-dns": "^7.2.2",
 +    "path": "^0.12.7",
 +    "voicetext": "0.0.7"
    },
