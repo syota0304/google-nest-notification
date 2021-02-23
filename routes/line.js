@@ -11,6 +11,8 @@ const client = new line.Client(config);
 
 google_home.device(process.env.GOOGLE_HOME_HOST_NAME);
 
+let entry_stamp_id;
+
 router.post('/', line.middleware(config), async (req, res) => {
   Promise.all(req.body.events.map(handlerEvent))
     .then(() => {
@@ -30,6 +32,15 @@ const handlerEvent = async(event) => {
     case 'message':
       const message = event.message;
       let text;
+
+      if(message.type == 'text' && message.text.slice(0, 1) == '#'){
+        return handleCommand(message, replyToken);
+      }
+      if(entry_stamp_id){
+        entry_stamp_id = null;
+        await replyText(replyToken, "登録をキャンセルしました");
+      }
+
       switch (message.type) {
         case 'text':
           text = message.text;
@@ -39,8 +50,7 @@ const handlerEvent = async(event) => {
           break;
           
         case 'sticker':
-          handleSticker(message, replyToken);
-          break;
+          return handleSticker(message, replyToken);
 
         default:
           text = 'テキストを送信してください';
@@ -54,21 +64,56 @@ const handlerEvent = async(event) => {
 };
 
 function handleSticker(message, replyToken) {
+  let id = message.stickerId
   let options = {
     method: 'POST',
     uri: process.env.GAS_STAMP_URL,
     followAllRedirects: true,
     json: {
         method: 'get',
-        id: message.stickerId,
+        id: id,
     },
   };
   request(options)
-  .then(res => {
-    google_home.notify(res.text, function(callback){
+  .then(async res => {
+    let text = res.text
+    if(text == null){
+      await replyText(replyToken, "登録されていないスタンプです\n登録する場合は下記のように返信してください\n#[登録名]");
+      entry_stamp_id = id;
+      text = "登録されていないスタンプです";
+    }
+    google_home.notify(text, function(callback){
       console.log(callback);
     });
-  });
+  })
+  .catch(err => {});
+}
+
+function handleCommand(message, replyToken) {
+  if(entry_stamp_id){
+    let text = message.text.slice(1);
+    let options = {
+      method: 'POST',
+      uri: process.env.GAS_STAMP_URL,
+      followAllRedirects: true,
+      json: {
+          method: 'set',
+          id: entry_stamp_id,
+          text: text,
+      },
+    };
+    request(options)
+    .then(async res => {
+      console.log(res);
+      entry_stamp_id = null;
+      if(res.result == "Set completed."){
+        await replyText(replyToken, "「"+ text +"」として登録しました");
+      }else{
+        await replyText(replyToken, "登録に失敗しました");
+      }
+    })
+    .catch();
+  }
 }
 
 const replyText = (token, texts) => {
