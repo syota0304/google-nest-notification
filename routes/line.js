@@ -1,6 +1,7 @@
 const line = require('@line/bot-sdk');
 const express = require('express');
 const request = require('request-promise');
+const google_home = require('google-home-notifier');
 const router = express.Router();
 const config = {
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
@@ -8,10 +9,11 @@ const config = {
 };
 const client = new line.Client(config);
 
+google_home.device(process.env.GOOGLE_HOME_HOST_NAME);
+
 router.post('/', line.middleware(config), async (req, res) => {
   Promise.all(req.body.events.map(handlerEvent))
-    .then((result) => {
-      console.log(result);
+    .then(() => {
       res.status(200).end();
     })
     .catch((err) => {
@@ -20,7 +22,7 @@ router.post('/', line.middleware(config), async (req, res) => {
     });
 });
 
-const handlerEvent = async (event) => {
+const handlerEvent = async(event) => {
   console.log(event);
   const replyToken = event.replyToken;
 
@@ -31,21 +33,25 @@ const handlerEvent = async (event) => {
       switch (message.type) {
         case 'text':
           text = message.text;
-          await replyText(replyToken, text);
-          return message.type;
+          google_home.notify(text, function(callback){
+            console.log(callback);
+          });
+          break;
+          
         case 'sticker':
           handleSticker(message, replyToken);
-          return message.type;
+          break;
+
         default:
           text = 'テキストを送信してください';
           await replyText(replyToken, text);
           return message.type;
       }
+      break;
     default:
       return event.type;
   }
 };
-
 
 function handleSticker(message, replyToken) {
   let options = {
@@ -59,8 +65,9 @@ function handleSticker(message, replyToken) {
   };
   request(options)
   .then(res => {
-    console.log(res);
-    return replyText(replyToken, res.text);
+    google_home.notify(res.text, function(callback){
+      console.log(callback);
+    });
   });
 }
 

@@ -11,6 +11,8 @@ for(let [path, router] of Object.entries(routes)) {
     app.use('/' + path, router);
 }
 
+app.use(express.static(__dirname + process.env.STATIC_PATH));
+
 const port = process.env.PORT || 3000
 
 app.listen(port, () => {
