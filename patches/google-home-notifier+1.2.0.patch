@@ -1,15 +1,14 @@
 diff --git a/node_modules/google-home-notifier/VoiceTextWriter.js b/node_modules/google-home-notifier/VoiceTextWriter.js
 new file mode 100644
-index 0000000..91f41be
+index 0000000..d6a84dc
 --- /dev/null
 +++ b/node_modules/google-home-notifier/VoiceTextWriter.js
-@@ -0,0 +1,33 @@
+@@ -0,0 +1,31 @@
 +var fs = require('fs');
-+var path = require('path');
 +var ip = require('ip');
 +var VoiceText = require('voicetext');
 +var voice = new VoiceText(process.env.VOICE_TEXT_API_KEY);
-+var OUT_PATH = path.dirname(process.argv[1]) + process.env.STATIC_PATH + '/temp.wav';
++var OUT_PATH = process.cwd() + process.env.STATIC_PATH + '/temp.wav';
 +var OUTPUT_URL = "http://" + ip.address() + ":" + process.env.PORT + "/temp.wav";
 +
 +class VoiceTextWriter{
@@ -19,9 +18,8 @@ index 0000000..91f41be
 +    voice
 +    .speaker(voice.SPEAKER.HIKARI)
 +    .emotion(voice.EMOTION.HAPPINESS)
-+    //	.emotion_level(voice.EMOTION_LEVEL.HIGH)
-+    .emotion_level(2)
-+        .speed(100)
++    .emotion_level(1)
++    .speed(100)
 +    .volume(120)
 +    .speak(text, function(e, buf){
 +        if(e){
@@ -920,13 +918,19 @@ index 0000000..3660903
 +  }
 +}
 diff --git a/node_modules/google-home-notifier/package.json b/node_modules/google-home-notifier/package.json
-index 3d68c5e..bf69373 100644
+index 5f6c682..c75a7e1 100644
 --- a/node_modules/google-home-notifier/package.json
 +++ b/node_modules/google-home-notifier/package.json
-@@ -1,26 +1,34 @@
+@@ -1,39 +1,49 @@
  {
 -  "_from": "https://registry.npmjs.org/google-home-notifier/-/google-home-notifier-1.2.0.tgz",
-+  "_from": "google-home-notifier@^1.2.0",
++  "_args": [
++    [
++      "google-home-notifier@1.2.0",
++      "/home/temari/google-nest-notification"
++    ]
++  ],
++  "_from": "google-home-notifier@1.2.0",
    "_id": "google-home-notifier@1.2.0",
    "_inBundle": false,
 -  "_integrity": "sha512-Ct7X7PQyx0jBX7dQFr32ahAFjdBtk/KnBMC+DL3UamkCppII78yuO7GClmmpBUnMJHjGSPi/y7za1mW/LoYI1Q==",
@@ -934,41 +938,39 @@ index 3d68c5e..bf69373 100644
    "_location": "/google-home-notifier",
 -  "_phantomChildren": {},
 +  "_phantomChildren": {
-+    "async": "2.6.3",
 +    "decompress-zip": "0.3.3",
-+    "lock": "0.1.4",
 +    "request": "2.88.2",
 +    "uuid": "3.4.0"
 +  },
    "_requested": {
 -    "type": "remote",
 -    "raw": "google-home-notifier@https://registry.npmjs.org/google-home-notifier/-/google-home-notifier-1.2.0.tgz",
-+    "type": "range",
++    "type": "version",
 +    "registry": true,
-+    "raw": "google-home-notifier@^1.2.0",
++    "raw": "google-home-notifier@1.2.0",
      "name": "google-home-notifier",
      "escapedName": "google-home-notifier",
 -    "rawSpec": "https://registry.npmjs.org/google-home-notifier/-/google-home-notifier-1.2.0.tgz",
 -    "saveSpec": "https://registry.npmjs.org/google-home-notifier/-/google-home-notifier-1.2.0.tgz",
 -    "fetchSpec": "https://registry.npmjs.org/google-home-notifier/-/google-home-notifier-1.2.0.tgz"
-+    "rawSpec": "^1.2.0",
++    "rawSpec": "1.2.0",
 +    "saveSpec": null,
-+    "fetchSpec": "^1.2.0"
++    "fetchSpec": "1.2.0"
    },
    "_requiredBy": [
-+    "#USER",
      "/"
    ],
    "_resolved": "https://registry.npmjs.org/google-home-notifier/-/google-home-notifier-1.2.0.tgz",
-   "_shasum": "e3d762503b0bc5770a9de92be8533bbe19fff580",
+-  "_shasum": "e3d762503b0bc5770a9de92be8533bbe19fff580",
 -  "_spec": "google-home-notifier@https://registry.npmjs.org/google-home-notifier/-/google-home-notifier-1.2.0.tgz",
--  "_where": "/tmp/tmp-47996u4UmwDMRiHZ",
-+  "_spec": "google-home-notifier@^1.2.0",
+-  "_where": "/tmp/tmp-4676VEiqIClabIf6",
++  "_spec": "1.2.0",
 +  "_where": "/home/temari/google-nest-notification",
    "author": {
      "name": "Noel Portugal"
    },
-@@ -29,9 +37,11 @@
+-  "bundleDependencies": false,
+   "dependencies": {
      "body-parser": "^1.15.2",
      "castv2-client": "^1.1.2",
      "express": "^4.14.0",
@@ -981,5 +983,7 @@ index 3d68c5e..bf69373 100644
 +    "path": "^0.12.7",
 +    "voicetext": "0.0.7"
    },
-   "deprecated": false,
+-  "deprecated": false,
    "description": "Send notifications to Google Home",
+   "keywords": [
+     "google home",
